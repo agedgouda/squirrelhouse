@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { usePermissions } from '@/composables/usePermissions';
 import { onKeyStroke } from '@vueuse/core';
 import { toast } from 'vue-sonner';
 import { PlusIcon, ShieldAlert } from 'lucide-vue-next';
@@ -16,6 +17,7 @@ import { useAiProcessing } from '@/composables/useAiProcessing';
 import { useDocumentActions } from '@/composables/useDocumentActions';
 import { useWorkflow } from '@/composables/useWorkflow';
 import DocumentManager from '@/components/documents/DocumentManager.vue';
+import ProjectUserList from '@/components/projects/ProjectUserList.vue';
 import projectRoutes from '@/routes/projects/index';
 import projectDocumentsRoutes from '@/routes/projects/documents/index';
 
@@ -35,7 +37,11 @@ const props = defineProps<{
     activeTab: string;
     clients: Client[];
     projectTypes: ProjectType[];
+    projectUsers: ProjectUser[];
+    availableUsers: Pick<User, 'id' | 'name' | 'email'>[];
 }>();
+
+const { isAdmin } = usePermissions();
 
 const columnStatuses = Object.keys(STATUS_LABELS) as TaskStatus[];
 
@@ -226,11 +232,11 @@ watch(() => props.currentProject, (newProject) => {
             </div>
 
             <div class="flex items-center border-b border-gray-200 dark:border-gray-700 mb-6">
-                <button v-for="tab in ['tasks','hierarchy']" :key="tab"
+                <button v-for="tab in ['tasks', 'hierarchy', 'users']" :key="tab"
                     @click="updateTab(tab)"
                     :class="['px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all border-b-2 -mb-[1px]',
                         activeTab === tab ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-400 hover:text-gray-600']">
-                    {{ tab === 'hierarchy' ? 'Documentation' : 'Tasks' }}
+                    {{ { tasks: 'Tasks', hierarchy: 'Documentation', users: 'Users' }[tab] }}
                 </button>
             </div>
 
@@ -251,13 +257,21 @@ watch(() => props.currentProject, (newProject) => {
             </div>
 
             <div v-show="activeTab === 'hierarchy'">
-
                 <DocumentManager
                     :project="currentProject"
                     :live-documents="currentProject.documents"
                     :is-generating="isGenerating"
                     @confirm-delete="confirmDelete"
                     @generate="generateDeliverables"
+                />
+            </div>
+
+            <div v-show="activeTab === 'users'">
+                <ProjectUserList
+                    :project-users="projectUsers"
+                    :can-manage="isAdmin"
+                    :project-id="currentProject.id"
+                    :available-users="availableUsers"
                 />
             </div>
         </div>

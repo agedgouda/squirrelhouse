@@ -6,6 +6,7 @@ import ProjectForm from '@/components/ProjectForm.vue';
 import ProjectFolio from '@/components/projects/ProjectFolio.vue';
 import ResourceHeader from '@/components/ResourceHeader.vue';
 import ResourceList from '@/components/ResourceList.vue';
+import { usePermissions } from '@/composables/usePermissions';
 import projectRoutes from '@/routes/projects/index';
 import { type BreadcrumbItem } from '@/types';
 import { Search, X } from 'lucide-vue-next';
@@ -25,6 +26,8 @@ const props = defineProps<{
     clients: any[];
     projectTypes: any[];
 }>();
+
+const { isAdmin } = usePermissions();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Projects', href: projectRoutes.index.url() },
@@ -116,7 +119,7 @@ watch(searchQuery, (newVal) => {
                     <p class="text-sm text-gray-500">Global overview of all active client engagements.</p>
                 </div>
 
-                <Dialog v-model:open="isProjectModalOpen">
+                <Dialog v-if="isAdmin" v-model:open="isProjectModalOpen">
                     <DialogTrigger asChild>
                         <Button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
                             <PlusIcon class="w-5 h-5 mr-2" />

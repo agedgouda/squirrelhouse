@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import {  ref } from 'vue';
+import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ProjectHeader from './Partials/ProjectHeader.vue';
+import { usePermissions } from '@/composables/usePermissions';
 import LifecycleProgress from '@/components/LifecycleProgress.vue';
 import DocumentManager from '@/components/documents/DocumentManager.vue';
 import TaskMasterList from '@/components/tasks/TaskMasterList.vue';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal.vue';
 import ProjectForm from '@/components/ProjectForm.vue';
+import ProjectUserList from '@/components/projects/ProjectUserList.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-vue-next';
@@ -20,9 +22,13 @@ import { useProjectDashboard } from '@/composables/useProjectDashboard';
 const props = defineProps<{
     project: Project;
     projectTypes: ProjectType[];
+    projectUsers: ProjectUser[];
+    availableUsers: Pick<User, 'id' | 'name' | 'email'>[];
     users?: User[];
     origin?: string | null;
 }>();
+
+const { isAdmin } = usePermissions();
 
 // --- COMPOSABLE LOGIC ---
 const {
@@ -84,6 +90,7 @@ const updateTab = (tab: string) => {
                 :origin="origin ?? null"
                 :active-tab="activeTab"
                 :back-label="backLabel"
+                :can-manage="isAdmin"
                 @update:active-tab="updateTab"
                 @edit="isEditModalOpen = true"
                 @back="handleBack"
@@ -113,9 +120,18 @@ const updateTab = (tab: string) => {
                         :users="project.client?.users || []"
                     />
                 </div>
+
+                <div v-show="activeTab === 'users'">
+                    <ProjectUserList
+                        :project-users="projectUsers"
+                        :can-manage="isAdmin"
+                        :project-id="project.id"
+                        :available-users="availableUsers"
+                    />
+                </div>
             </div>
 
-            <div class="mt-12 bg-white dark:bg-gray-800 rounded-xl border border-red-100 dark:border-red-900/30 shadow-sm overflow-hidden">
+            <div v-if="isAdmin" class="mt-12 bg-white dark:bg-gray-800 rounded-xl border border-red-100 dark:border-red-900/30 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-red-50 dark:border-red-900/20 bg-red-50/50 dark:bg-red-900/10">
                     <h2 class="font-black text-red-600 dark:text-red-400 uppercase text-[10px] tracking-[0.2em]">Danger Zone</h2>
                 </div>
@@ -131,7 +147,7 @@ const updateTab = (tab: string) => {
             </div>
         </div>
 
-        <Dialog :open="isEditModalOpen" @update:open="isEditModalOpen = $event">
+        <Dialog v-if="isAdmin" :open="isEditModalOpen" @update:open="isEditModalOpen = $event">
             <DialogContent class="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>Edit Project Details</DialogTitle>

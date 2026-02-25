@@ -6,6 +6,7 @@ use App\Http\Requests\ProjectRequest;
 use App\Models\Organization;
 use App\Models\Project;
 use App\Models\ProjectType;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -43,8 +44,38 @@ class ProjectController extends Controller
 
         Gate::authorize('view', $project);
 
+        $orgId = $project->organization_id;
+        $assignedUserIds = $project->users()->pluck('users.id');
+
         return inertia('Projects/Show', [
             'project' => $project->loadFullPipeline(),
+            'projectUsers' => $project->users()->get(['users.id', 'users.first_name', 'users.last_name', 'users.email'])->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->pivot->role,
+            ]),
+            'availableUsers' => User::inOrganization($orgId)
+                ->whereNotIn('id', $assignedUserIds)
+                ->whereNotIn('id', function ($q) use ($orgId) {
+                    $q->select('model_has_roles.model_id')
+                        ->from('model_has_roles')
+                        ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                        ->where('model_has_roles.model_type', User::class)
+                        ->where(function ($q2) use ($orgId) {
+                            $q2->where('roles.name', 'super-admin')
+                                ->orWhere(function ($q3) use ($orgId) {
+                                    $q3->where('roles.name', 'org-admin')
+                                        ->where('model_has_roles.team_id', $orgId);
+                                });
+                        });
+                })
+                ->get(['id', 'first_name', 'last_name', 'email'])
+                ->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                ]),
             'projectTypes' => auth()->user()->hasRole('super-admin')
                 ? ProjectType::all(['id', 'name'])
                 : ProjectType::where('organization_id', $project->organization_id)->get(['id', 'name']),

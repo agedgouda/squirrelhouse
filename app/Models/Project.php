@@ -6,6 +6,7 @@ use App\Collections\ProjectCollection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
@@ -15,11 +16,22 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
+        'budget',
+        'launch_date',
+        'status',
         'project_type_id',
         'client_id',
         'document_id',
         'current_lifecycle_step_id',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'budget' => 'float',
+            'launch_date' => 'date',
+        ];
+    }
 
     // Explicitly define the primary key type for UUIDs
     protected $keyType = 'string';
@@ -54,6 +66,14 @@ class Project extends Model
         }
 
         return $orgId;
+    }
+
+    /**
+     * Get the users assigned to this project.
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
     }
 
     /**
@@ -120,12 +140,16 @@ class Project extends Model
             });
         }
 
-        // 3. Members / Consultants
-        return $query->whereHas('client', function ($q) use ($user, $currentOrgId) {
-            $q->where('organization_id', $currentOrgId)
-                ->whereHas('users', function ($sub) use ($user) {
-                    $sub->where('users.id', $user->id);
-                });
+        // 3. Members / Consultants — direct project assignment or client-level fallback
+        return $query->where(function ($q) use ($user, $currentOrgId) {
+            $q->whereHas('users', function ($sub) use ($user) {
+                $sub->where('users.id', $user->id);
+            })->orWhereHas('client', function ($c) use ($user, $currentOrgId) {
+                $c->where('organization_id', $currentOrgId)
+                    ->whereHas('users', function ($sub) use ($user) {
+                        $sub->where('users.id', $user->id);
+                    });
+            });
         });
     }
 

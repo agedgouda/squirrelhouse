@@ -12,7 +12,7 @@ class EnsureUserCanAccessClient
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             Log::warning('[AccessClient] No user found in request.');
             abort(404);
         }
@@ -43,9 +43,17 @@ class EnsureUserCanAccessClient
             if ($hasClientAccess) {
                 return $next($request);
             }
+
+            $hasProjectAccess = $user->assignedProjects()
+                ->whereHas('client', fn ($q) => $q->where('organization_id', $activeOrgId))
+                ->exists();
+
+            if ($hasProjectAccess) {
+                return $next($request);
+            }
         }
 
-        Log::error('[AccessClient] Access Denied for User ' . $user->id);
+        Log::error('[AccessClient] Access Denied for User '.$user->id);
         abort(404);
     }
 }

@@ -71,10 +71,15 @@ declare global {
         updated_at: string;
     }
 
+    export type ProjectStatus = 'On Track' | 'At Risk' | 'Delayed';
+
     export interface Project {
         id: string; // UUID
         name: string;
         description: string | null;
+        budget: number | null;
+        launch_date: string | null;
+        status: ProjectStatus;
         client_id: string;
         project_type_id: string | null;
         current_lifecycle_step_id?: number | null;
@@ -231,6 +236,13 @@ declare global {
         updated_at: string;
         deleted_at?: string | null;
         user?: User;
+    }
+
+    export interface ProjectUser {
+        id: number;
+        name: string;
+        email: string;
+        role: 'project-lead' | 'team-member';
     }
 
     export interface Organization {

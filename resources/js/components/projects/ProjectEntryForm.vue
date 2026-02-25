@@ -36,6 +36,10 @@ const form = useForm({
 
     // Pull the project type from the project data when editing.
     project_type_id: props.editData?.project_type_id || '',
+
+    budget: props.editData?.budget?.toString() ?? '',
+    launch_date: props.editData?.launch_date?.substring(0, 10) ?? '',
+    status: props.editData?.status ?? 'On Track',
 });
 
 const submit = () => {
@@ -121,6 +125,53 @@ const submit = () => {
                     </Select>
                 </div>
             </template>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="grid gap-2">
+                    <Label for="budget" class="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">
+                        Budget
+                    </Label>
+                    <Input
+                        id="budget"
+                        v-model="form.budget"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        class="h-12 rounded-xl bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 font-bold"
+                        :class="{ 'border-red-500': form.errors.budget }"
+                    />
+                </div>
+
+                <div class="grid gap-2">
+                    <Label for="launch_date" class="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">
+                        Launch Date
+                    </Label>
+                    <Input
+                        id="launch_date"
+                        v-model="form.launch_date"
+                        type="date"
+                        class="h-12 rounded-xl bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 font-bold"
+                        :class="{ 'border-red-500': form.errors.launch_date }"
+                    />
+                </div>
+            </div>
+
+            <div class="grid gap-2">
+                <Label class="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">
+                    Status
+                </Label>
+                <Select v-model="form.status">
+                    <SelectTrigger class="h-12 rounded-xl border-gray-200 dark:border-gray-800 font-bold" :class="{ 'border-red-500': form.errors.status }">
+                        <SelectValue placeholder="Select status..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="On Track">On Track</SelectItem>
+                        <SelectItem value="At Risk">At Risk</SelectItem>
+                        <SelectItem value="Delayed">Delayed</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
         </div>
 
         <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">

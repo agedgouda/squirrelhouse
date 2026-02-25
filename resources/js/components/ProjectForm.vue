@@ -25,6 +25,9 @@ const form = useForm({
     client_id: props.project?.client_id?.toString() ?? props.initialClientId?.toString() ?? '',
     project_type_id: props.project?.project_type_id?.toString() ?? '',
     description: props.project?.description ?? '',
+    budget: props.project?.budget?.toString() ?? '',
+    launch_date: props.project?.launch_date?.substring(0, 10) ?? '',
+    status: props.project?.status ?? 'On Track',
 });
 
 const submit = () => {
@@ -92,6 +95,41 @@ const submit = () => {
                 rows="3"
             ></Textarea>
             <p v-if="form.errors.description" class="text-xs text-destructive font-medium">{{ form.errors.description }}</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div class="grid gap-2">
+                <Label :class="{ 'text-destructive': form.errors.budget }">Budget</Label>
+                <Input
+                    v-model="form.budget"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                />
+                <p v-if="form.errors.budget" class="text-xs text-destructive font-medium">{{ form.errors.budget }}</p>
+            </div>
+
+            <div class="grid gap-2">
+                <Label :class="{ 'text-destructive': form.errors.launch_date }">Launch Date</Label>
+                <Input v-model="form.launch_date" type="date" />
+                <p v-if="form.errors.launch_date" class="text-xs text-destructive font-medium">{{ form.errors.launch_date }}</p>
+            </div>
+        </div>
+
+        <div class="grid gap-2">
+            <Label :class="{ 'text-destructive': form.errors.status }">Status</Label>
+            <Select v-model="form.status">
+                <SelectTrigger :class="['w-full h-10 flex items-center justify-between px-3', form.errors.status ? 'border-destructive' : '']">
+                    <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="On Track">On Track</SelectItem>
+                    <SelectItem value="At Risk">At Risk</SelectItem>
+                    <SelectItem value="Delayed">Delayed</SelectItem>
+                </SelectContent>
+            </Select>
+            <p v-if="form.errors.status" class="text-xs text-destructive font-medium">{{ form.errors.status }}</p>
         </div>
 
         <Button

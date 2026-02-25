@@ -8,6 +8,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectTypeController;
+use App\Http\Controllers\ProjectUserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
@@ -61,6 +62,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:super-admin|org-admin'])->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+
+        Route::post('/projects/{project}/users', [ProjectUserController::class, 'store'])
+            ->name('projects.users.store');
+        Route::delete('/projects/{project}/users/{user}', [ProjectUserController::class, 'destroy'])
+            ->name('projects.users.destroy');
 
         Route::resource('roles', RoleController::class);
         Route::delete('/roles/{role}/users/{user}', [RoleController::class, 'unassignUser'])

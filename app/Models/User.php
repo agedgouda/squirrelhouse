@@ -3,18 +3,18 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Collections\UserCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
-use App\Collections\UserCollection;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
+    use HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -64,6 +64,11 @@ class User extends Authenticatable
     public function clients(): BelongsToMany
     {
         return $this->belongsToMany(Client::class)->withTimestamps();
+    }
+
+    public function assignedProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class)->withPivot('role')->withTimestamps();
     }
 
     public function tasks(): \Illuminate\Database\Eloquent\Relations\HasMany

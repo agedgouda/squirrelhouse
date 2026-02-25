@@ -18,9 +18,26 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        // isOrgAdmin handles the comparison of $project->organization_id
-        // (the virtual attribute) against the active team context.
-        return $this->isOrgAdmin($user, $project);
+        $activeTeamId = getPermissionsTeamId();
+        $orgId = $project->organization_id;
+
+        // Project must belong to the active org context
+        if ($orgId !== $activeTeamId) {
+            return false;
+        }
+
+        // Org admins can view all projects in their org
+        if ($this->isOrgAdmin($user, $project)) {
+            return true;
+        }
+
+        // Direct project assignment (primary check)
+        if ($project->users()->where('users.id', $user->id)->exists()) {
+            return true;
+        }
+
+        // Client-level fallback (backwards compatibility)
+        return (bool) $project->client?->users()->where('users.id', $user->id)->exists();
     }
 
     public function create(User $user): bool

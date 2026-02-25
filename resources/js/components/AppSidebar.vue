@@ -34,7 +34,7 @@ const userRoles = computed(() => page.props.auth.user.roles);
 const isSuperAdmin = computed(() => userRoles.value.includes('super-admin'));
 const isOrgAdmin = computed(() => userRoles.value.includes('org-admin'));
 const hasClients = computed(() => (page.props.auth.user.clients?.length ?? 0) > 0);
-const canAccessWorkspace = computed(() => isSuperAdmin.value || hasClients.value);
+const canAccessWorkspace = computed(() => isSuperAdmin.value || hasClients.value || isOrgAdmin.value);
 
 const mainNavItems: NavItem[] = [
     {

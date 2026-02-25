@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -42,6 +43,34 @@ class DashboardController extends Controller
             'projectTypes' => $user->hasRole('super-admin')
                 ? \App\Models\ProjectType::all(['id', 'name'])
                 : \App\Models\ProjectType::where('organization_id', getPermissionsTeamId())->get(['id', 'name']),
+            'projectUsers' => $currentProject->users()->get(['users.id', 'users.first_name', 'users.last_name', 'users.email'])->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->pivot->role,
+            ]),
+            'availableUsers' => (function () use ($currentProject) {
+                $orgId = $currentProject->organization_id;
+                $assignedUserIds = $currentProject->users()->pluck('users.id');
+
+                return User::inOrganization($orgId)
+                    ->whereNotIn('id', $assignedUserIds)
+                    ->whereNotIn('id', function ($q) use ($orgId) {
+                        $q->select('model_has_roles.model_id')
+                            ->from('model_has_roles')
+                            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                            ->where('model_has_roles.model_type', User::class)
+                            ->where(function ($q2) use ($orgId) {
+                                $q2->where('roles.name', 'super-admin')
+                                    ->orWhere(function ($q3) use ($orgId) {
+                                        $q3->where('roles.name', 'org-admin')
+                                            ->where('model_has_roles.team_id', $orgId);
+                                    });
+                            });
+                    })
+                    ->get(['id', 'first_name', 'last_name', 'email'])
+                    ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email]);
+            })(),
         ])
             ->toResponse($request)
             ->withCookie(cookie()->forever('last_project_id', $currentProject->id))
