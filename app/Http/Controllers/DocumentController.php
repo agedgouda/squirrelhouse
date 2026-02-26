@@ -29,11 +29,11 @@ class DocumentController extends Controller
     public function store(StoreDocumentRequest $request, Project $project)
     {
         Gate::authorize('create', [Document::class, $project]);
-
         // The document only cares about validated data
         $document = $project->documents()->create(array_merge(
             $request->validated(),
-            ['creator_id' => $request->user()->id]
+            ['creator_id' => $request->user()->id],
+            ['lifecycle_step_id' => $project->current_lifecycle_step_id]
         ));
 
         $target = $request->query('redirect')
@@ -57,7 +57,7 @@ class DocumentController extends Controller
 
         return inertia('Documents/Show', [
             'project' => $project->load(['type', 'client.users']),
-            'item' => $document->load(['assignee', 'creator', 'editor']),
+            'item' => $document->load(['assignee', 'creator', 'editor', 'lifecycleStep']),
         ]);
     }
 

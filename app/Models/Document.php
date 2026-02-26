@@ -44,6 +44,7 @@ class Document extends Model
         'task_status',
         'priority',
         'due_at',
+        'lifecycle_step_id',
     ];
 
     /**
@@ -87,6 +88,11 @@ class Document extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    public function lifecycleStep(): BelongsTo
+    {
+        return $this->belongsTo(LifecycleStep::class, 'lifecycle_step_id');
     }
 
     /**

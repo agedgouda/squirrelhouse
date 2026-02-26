@@ -136,6 +136,9 @@ declare global {
         children?: ProjectDocument[];
         tasks?: Task[];
 
+        lifecycle_step_id: number | null;
+        lifecycleStep?: LifecycleStep | null;
+
         embedding: any | null;
         metadata: DocumentMetadata;
         processed_at: string | null;

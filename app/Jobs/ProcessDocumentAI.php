@@ -52,6 +52,8 @@ class ProcessDocumentAI implements ShouldQueue
                 ->where('type', $outputType)
                 ->delete();
 
+            $lifecycle_step_id = $this->document->project->current_lifecycle_step_id;
+
             foreach ($generatedItems as $data) {
                 // 1. Extract the specific content using the dynamic key
                 $content = $data[$outputType] ?? null;
@@ -66,6 +68,7 @@ class ProcessDocumentAI implements ShouldQueue
                     'type'         => $outputType,
                     'name'         => $data['title'] ?? 'Untitled Deliverable',
                     'content'      => $content,
+                    'lifecycle_step_id' => $lifecycle_step_id,
                     'metadata'     => [
                         'criteria' => $data['criteria'] ?? [],
                         'category' => $data['category'] ?? 'general',

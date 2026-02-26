@@ -39,14 +39,22 @@ const shouldShowTask = computed(() => isTask(props.item.type));
             <div class="bg-slate-50 rounded-3xl border border-slate-200 p-8 space-y-8">
                 <div>
                     <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Properties</h4>
-
                     <div class="space-y-5">
-                        <div class="flex items-center justify-between text-xs">
+                        <div class="flex flex-col">
+                            <div class="flex justify-between items-center h-[24px]  text-xs">
                             <span class="text-slate-500">Category</span>
                             <span class="font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[9px] border border-indigo-100">
                                 {{ getDocLabel(item.type) || 'New Document' }}
                             </span>
+                            </div>
+                             <div class="flex justify-between items-center h-[24px] text-xs mt-3" v-if="item.lifecycle_step">
+                                <span class="text-slate-500">Phase</span>
+                                <span class="relative left-[10px] font-black text-right uppercase tracking-[0.12em] pr-4  text-slate-700 text-[10px]">{{ item.lifecycle_step.label  }}<br/>
+                                ({{ item.lifecycle_step.description  }})
+                                </span>
+                            </div>
                         </div>
+
 
                         <div class="flex flex-col" v-if="shouldShowTask">
                             <div class="flex justify-between items-center h-[24px]">
@@ -79,7 +87,8 @@ const shouldShowTask = computed(() => isTask(props.item.type));
                                 </div>
                             </div>
 
-                            <div class="flex justify-between items-center h-[24px]">
+
+                        <div class="flex justify-between items-center h-[24px]">
                                 <span class="text-slate-500 text-xs">Priority</span>
                                 <Select :model-value="item.priority" @update:model-value="(val) => $emit('change', 'priority', val)">
                                     <SelectTrigger class="h-auto p-0 border-none bg-transparent hover:bg-slate-100 rounded-md transition-all shadow-none w-auto outline-none">
